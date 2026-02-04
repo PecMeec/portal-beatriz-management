@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beatriz Management - Portal de Gestão de Alunos</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="profile-circle">
+                   <img src="img/image.jgp" alt="Foto da Beatriz">
+                </div>
+                <h2>✨Olá, Beatriz!✨</h2>
+                <p>Gestão de Alunos & Performance</p>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-btn active" onclick="goToPage('dashboard')">
+                    📊 Dashboard
+                </button>
+                <button class="nav-btn" onclick="goToPage('alunos')">
+                    👥 Meus Alunos
+                </button>
+                <button class="nav-btn" onclick="goToPage('modulos')">
+                    📚 Módulos & Aulas
+                </button>
+                <button class="nav-btn" onclick="goToPage('presencas')">
+                    ✓ Presença
+                </button>
+                <button class="nav-btn" onclick="goToPage('financeiro')">
+                    💰 Financeiro
+                </button>
+                <button class="nav-btn" onclick="goToPage('relatorios')">
+                    📈 Relatórios
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <section id="dashboard" class="page active">
+                <div class="page-header">
+                    <h1>Dashboard de Performance</h1>
+                    <p class="subtitle">Visão geral da sua produtividade e dos seus alunos</p>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="stat-card">
+                        <div class="card-icon">👥</div>
+                        <h3>Alunos Ativos</h3>
+                        <p class="stat-value" id="total-alunos">0</p>
+                        <span class="card-desc">Foco nos alunos em curso</span>
+                    </div>
+                    <div class="stat-card">
+                        <div class="card-icon">📚</div>
+                        <h3>Módulos Ativos</h3>
+                        <p class="stat-value" id="total-modulos">0</p>
+                        <span class="card-desc">Turmas em funcionamento</span>
+                    </div>
+                    <div class="stat-card alert">
+                        <div class="card-icon">⚠️</div>
+                        <h3>Pagamentos Atrasados</h3>
+                        <p class="stat-value" id="pagamentos-atrasados">0</p>
+                        <span class="card-desc">Requer atenção</span>
+                    </div>
+                    <div class="stat-card alert">
+                        <div class="card-icon">💳</div>
+                        <h3>Alunos Devedores</h3>
+                        <p class="stat-value" id="alunos-devedores">0</p>
+                        <span class="card-desc">Com débitos pendentes</span>
+                    </div>
+                </div>
+
+                <div class="actions-section">
+                    <h2>Ações Rápidas</h2>
+                    <div class="actions-grid">
+                        <button class="action-btn" onclick="goToPage('alunos')">
+                            <span class="action-icon">👥</span>
+                            Gerenciar Alunos
+                        </button>
+                        <button class="action-btn" onclick="goToPage('modulos')">
+                            <span class="action-icon">📚</span>
+                            Módulos & Aulas
+                        </button>
+                        <button class="action-btn" onclick="goToPage('presencas')">
+                            <span class="action-icon">✓</span>
+                            Registrar Presença
+                        </button>
+                        <button class="action-btn" onclick="goToPage('financeiro')">
+                            <span class="action-icon">💰</span>
+                            Financeiro
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Alunos Page -->
+            <section id="alunos" class="page">
+                <div class="page-header">
+                    <h1>Gestão de Alunos</h1>
+                    <button class="btn-primary" onclick="openAlunoModal()">+ Novo Aluno</button>
+                </div>
+
+                <div class="search-bar">
+                    <input type="text" id="search-alunos" placeholder="Buscar aluno..." onkeyup="filterAlunos()">
+                    <select id="filter-status" onchange="filterAlunos()">
+                        <option value="">Todos os status</option>
+                        <option value="ativo">Ativo</option>
+                        <option value="inativo">Inativo</option>
+                        <option value="pausado">Pausado</option>
+                    </select>
+                    <select id="filter-curso" onchange="filterAlunos()">
+                        <option value="">Todos os cursos</option>
+                        <option value="Inglês Básico">Inglês Básico</option>
+                        <option value="Inglês Avançado">Inglês Avançado</option>
+                        <option value="Particular">Particular</option>
+                    </select>
+                </div>
+
+                <div id="alunos-list" class="alunos-grid">
+                    <!-- Alunos serão adicionados aqui -->
+                </div>
+            </section>
+
+            <!-- Módulos Page -->
+            <section id="modulos" class="page">
+                <div class="page-header">
+                    <h1>Módulos & Aulas</h1>
+                    <button class="btn-primary" onclick="openModuloModal()">+ Novo Módulo</button>
+                </div>
+
+                <div class="modulos-container">
+                    <div class="modulos-sidebar">
+                        <h3>Seus Módulos</h3>
+                        <div id="modulos-list">
+                            <!-- Módulos serão adicionados aqui -->
+                        </div>
+                    </div>
+                    <div class="aulas-panel">
+                        <h3>Cronograma de Aulas</h3>
+                        <button class="btn-primary" id="btn-nova-aula" onclick="openAulaModal()" style="display:none;">+ Nova Aula</button>
+                        <div id="aulas-list">
+                            <p class="empty-state">Selecione um módulo para ver suas aulas</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Presença Page -->
+            <section id="presencas" class="page">
+                <div class="page-header">
+                    <h1>Controle de Presença</h1>
+                </div>
+
+                <div class="presenca-form">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label>1. Selecione o Módulo:</label>
+                            <select id="select-modulo-presenca" onchange="carregarAulasDoModulo()">
+                                <option value="">-- Selecione um módulo --</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>2. Selecione a Aula:</label>
+                            <select id="select-aula" onchange="carregarPresencas()">
+                                <option value="">-- Selecione primeiro o módulo --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="presencas-table" style="margin-top: 20px;">
+                        <!-- Presença dos alunos será adicionada aqui -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Financeiro Page -->
+            <section id="financeiro" class="page">
+                <div class="page-header">
+                    <h1>Controle Financeiro</h1>
+                    <button class="btn-secondary" onclick="limparRegistrosAntigos()" style="color: var(--danger); border-color: var(--danger);">Limpar Registros Antigos</button>
+                </div>
+
+                <div class="financeiro-filters">
+                    <select id="filter-financeiro-status" onchange="loadFinanceiro()">
+                        <option value="">Todos os status</option>
+                        <option value="pago">Pago</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="atrasado">Atrasado</option>
+                    </select>
+                    <select id="filter-financeiro-mes" onchange="loadFinanceiro()">
+                        <option value="">Todos os meses</option>
+                        <!-- Meses serão preenchidos via JS -->
+                    </select>
+                    <select id="filter-financeiro-modulo" onchange="loadFinanceiro()">
+                        <option value="">Todos os módulos</option>
+                        <!-- Módulos serão preenchidos via JS -->
+                    </select>
+                </div>
+
+                <div class="table-container">
+                    <table class="financeiro-table">
+                        <thead>
+                            <tr>
+                                <th>Aluno</th>
+                                <th>Descrição</th>
+                                <th>Valor</th>
+                                <th>Vencimento</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="financeiro-table-body">
+                            <!-- Pagamentos serão adicionados aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Relatórios Page -->
+            <section id="relatorios" class="page">
+                <div class="page-header">
+                    <h1>Relatórios & Estatísticas</h1>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="export-month-select" class="btn-secondary" style="padding: 5px 10px; font-size: 12px;">
+                            <option value="">Mês Atual</option>
+                        </select>
+                        <button class="btn-primary" onclick="exportarRelatorioPDF()">📄 Exportar PDF</button>
+                    </div>
+                </div>
+
+                <div class="relatorios-container">
+                    <div class="relatorio-section">
+                        <div class="section-header" onclick="toggleSection('resumo-mensal-content')">
+                            <h2>Resumo Mensal (Foco em Ativos)</h2>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div id="resumo-mensal-content" class="collapsible-content active">
+                        <div class="resumo-grid">
+                            <div class="resumo-card">
+                                <h4>Alunos Ativos</h4>
+                                <p class="resumo-value" id="rel-total-alunos">0</p>
+                            </div>
+                            <div class="resumo-card">
+                                <h4>Frequência Média</h4>
+                                <p class="resumo-value" id="rel-frequencia-media">0%</p>
+                            </div>
+                            <div class="resumo-card">
+                                <h4>Receita Total (Paga)</h4>
+                                <p class="resumo-value" id="rel-receita-total">R$ 0,00</p>
+                            </div>
+                            <div class="resumo-card alert">
+                                <h4>Pendências Totais</h4>
+                                <p class="resumo-value" id="rel-pendencias">R$ 0,00</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    </div> <!-- End Resumo Mensal -->
+
+                    <div class="relatorio-section">
+                        <div class="section-header" onclick="toggleSection('graficos-content')">
+                            <h2>Visão Estatística (Gráficos)</h2>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div id="graficos-content" class="collapsible-content active">
+                            <div class="charts-grid">
+                                <div class="chart-container">
+                                    <canvas id="chart-financeiro"></canvas>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="chart-alunos-nivel"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relatorio-section">
+                        <div class="section-header" onclick="toggleSection('desempenho-content')">
+                            <h2>Desempenho por Aluno</h2>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div id="desempenho-content" class="collapsible-content active">
+                        <div class="table-container">
+                            <table class="relatorio-table">
+                                <thead>
+                                    <tr>
+                                        <th>Aluno</th>
+                                        <th>Curso</th>
+                                        <th>Frequência</th>
+                                        <th>Média de Notas</th>
+                                        <th>Situação</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="relatorio-alunos">
+                                    <!-- Dados serão injetados aqui -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    </div> <!-- End Desempenho -->
+
+                    <div class="relatorio-section">
+                        <div class="section-header" onclick="toggleSection('financeiro-detalhado-content')">
+                            <h2>Situação Financeira Detalhada</h2>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div id="financeiro-detalhado-content" class="collapsible-content active">
+                        <div class="table-container">
+                            <table class="relatorio-table">
+                                <thead>
+                                    <tr>
+                                        <th>Aluno</th>
+                                        <th>Mensalidade</th>
+                                        <th>Total Pendente</th>
+                                        <th>Status Geral</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="relatorio-financeiro">
+                                    <!-- Dados serão injetados aqui -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    </div> <!-- End Financeiro Detalhado -->
+
+                    <div class="relatorio-section">
+                        <div class="section-header" onclick="toggleSection('estatisticas-nivel-content')">
+                            <h2>Estatísticas por Nível</h2>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div id="estatisticas-nivel-content" class="collapsible-content active">
+                            <div id="relatorio-niveis" class="stats-grid">
+                                <!-- Dados serão injetados aqui -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modais -->
+    <!-- Modal Aluno -->
+    <div id="modal-aluno" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAlunoModal()">&times;</span>
+            <h2 id="modal-aluno-titulo">Cadastrar Novo Aluno</h2>
+            <form id="form-aluno" onsubmit="salvarAluno(event)">
+                <div class="form-group">
+                    <label>Nome Completo:</label>
+                    <input type="text" id="aluno-nome" required>
+                </div>
+                <div class="form-group">
+                    <label>E-mail:</label>
+                    <input type="email" id="aluno-email">
+                </div>
+                <div class="form-group">
+                    <label>Telefone:</label>
+                    <input type="text" id="aluno-telefone">
+                </div>
+                <div class="form-group">
+                    <label>Curso/Nível:</label>
+                    <select id="aluno-curso" required>
+                        <option value="Inglês Básico">Inglês Básico</option>
+                        <option value="Inglês Avançado">Inglês Avançado</option>
+                        <option value="Particular">Particular (Individual)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Valor Mensalidade:</label>
+                    <input type="number" id="aluno-valor" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Dia Vencimento:</label>
+                    <input type="number" id="aluno-dia-vencimento" min="1" max="31" required>
+                </div>
+                <div class="form-group">
+                    <label>Data de Início:</label>
+                    <input type="date" id="aluno-data" required>
+                </div>
+                <div class="form-group">
+                    <label>Status:</label>
+                    <select id="aluno-status" required>
+                        <option value="ativo">Ativo</option>
+                        <option value="inativo">Inativo</option>
+                        <option value="pausado">Pausado</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">Salvar Aluno</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Módulo -->
+    <div id="modal-modulo" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModuloModal()">&times;</span>
+            <h2>Novo Módulo</h2>
+            <form id="form-modulo" onsubmit="salvarModulo(event)">
+                <div class="form-group">
+                    <label>Nome do Módulo:</label>
+                    <input type="text" id="modulo-nome" required>
+                </div>
+                <div class="form-group">
+                    <label>Descrição:</label>
+                    <textarea id="modulo-descricao"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Nível:</label>
+                    <select id="modulo-nivel" required>
+                        <option value="basico">Básico</option>
+                        <option value="avancado">Avançado</option>
+                        <option value="particular">Particular</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Data de Início:</label>
+                    <input type="date" id="modulo-data" required>
+                </div>
+                <button type="submit" class="btn-primary">Criar Módulo</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Aula -->
+    <div id="modal-aula" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAulaModal()">&times;</span>
+            <h2>Nova Aula</h2>
+            <form id="form-aula" onsubmit="salvarAula(event)">
+                <div class="form-group">
+                    <label>Título da Aula:</label>
+                    <input type="text" id="aula-titulo" required>
+                </div>
+                <div class="form-group">
+                    <label>Descrição/Conteúdo:</label>
+                    <textarea id="aula-descricao"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Data da Aula:</label>
+                    <input type="date" id="aula-data" required>
+                </div>
+                <div class="form-group">
+                    <label>Duração (minutos):</label>
+                    <input type="number" id="aula-duracao" value="60">
+                </div>
+                <button type="submit" class="btn-primary">Salvar Aula</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Presença -->
+    <div id="modal-presenca" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closePresencaModal()">&times;</span>
+            <h2>Registrar Presença e Avaliação</h2>
+            <form id="form-presenca" onsubmit="salvarPresencaComJustificativa(event)">
+                <div class="form-group">
+                    <label>Aluno:</label>
+                    <input type="text" id="presenca-aluno-nome" disabled>
+                </div>
+                <div class="form-group">
+                    <label>Status de Presença:</label>
+                    <select id="presenca-status" onchange="atualizarCamposPresenca()" required>
+                        <option value="">-- Selecione --</option>
+                        <option value="presente">Presente</option>
+                        <option value="falta">Falta</option>
+                        <option value="reposta">Reposta</option>
+                    </select>
+                </div>
+                <div id="justificativa-group" class="form-group" style="display:none;">
+                    <label>Justificativa:</label>
+                    <select id="presenca-justificativa" onchange="atualizarCamposPresenca()">
+                        <option value="doenca">Doença/Médico</option>
+                        <option value="trabalho">Trabalho</option>
+                        <option value="viagem">Viagem</option>
+                        <option value="internet">Falta de Internet</option>
+                        <option value="luz">Falta de Luz</option>
+                        <option value="outros">Outros</option>
+                        <option value="nenhuma">Sem Justificativa</option>
+                    </select>
+                </div>
+                <div id="reposicao-group" class="form-group" style="display:none; background: #F3E8FF; padding: 15px; border-radius: 10px; border: 1px solid var(--primary-light);">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600; color: var(--primary);">
+                        <input type="checkbox" id="presenca-repor" onchange="atualizarAvisoReposicao()" style="width: auto;"> 
+                        Deseja repor esta aula? (R$ 35,00)
+                    </label>
+                    <p id="aviso-reposicao" style="color: var(--text-light); font-size: 12px; margin-top: 8px; display: none;">
+                        ⚠️ Uma cobrança de <strong>R$ 35,00</strong> será gerada no financeiro.
+                    </p>
+                </div>
+                
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border);">
+                
+                <div id="avaliacao-aula-group">
+                    <h3>Avaliação desta Aula</h3>
+                    <div class="form-group">
+                        <label>Nota do Desempenho (0-10):</label>
+                        <input type="number" id="presenca-nota" min="0" max="10" step="0.5">
+                    </div>
+                    <div class="form-group">
+                        <label>Observações/Pontos a Melhorar:</label>
+                        <textarea id="presenca-observacao" rows="3" placeholder="O que o aluno precisa melhorar nesta aula específica?"></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary">Salvar Registro</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Pagamento -->
+    <div id="modal-pagamento" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModalPagamento()">&times;</span>
+            <h2>Atualizar Pagamento</h2>
+            <form id="form-pagamento" onsubmit="salvarPagamento(event)">
+                <div class="form-group">
+                    <label>Aluno:</label>
+                    <input type="text" id="pagamento-aluno-nome" disabled>
+                </div>
+                <div class="form-group">
+                    <label>Descrição:</label>
+                    <input type="text" id="pagamento-descricao" disabled>
+                </div>
+                <div class="form-group">
+                    <label>Valor:</label>
+                    <input type="text" id="pagamento-valor" disabled>
+                </div>
+                <div class="form-group">
+                    <label>Data do Pagamento:</label>
+                    <input type="date" id="pagamento-data">
+                </div>
+                <div class="form-group">
+                    <label>Status:</label>
+                    <select id="pagamento-novo-status" required>
+                        <option value="pago">Pago</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="atrasado">Atrasado</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">Salvar Pagamento</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
