@@ -785,3 +785,256 @@ tr:last-child td {
     border-radius: 8px;
     flex: 1;
 }
+/* ---------- Toggle semana/mês ---------- */
+.cal-view-toggle {
+    display: flex;
+    background: var(--bg-secondary, #f3f4f6);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+}
+.toggle-btn {
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    padding: 5px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text-light, #666);
+    transition: all 0.15s;
+}
+.toggle-btn.active {
+    background: var(--primary, #592581);
+    color: #fff;
+    font-weight: 500;
+}
+ 
+/* ---------- Legenda ---------- */
+.cal-legenda {
+    display: flex;
+    gap: 18px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+.legenda-item {
+    font-size: 12px;
+    color: var(--text-light, #666);
+}
+.legenda-basico  { color: #0F6E56; }
+.legenda-avancado { color: #534AB7; }
+.legenda-particular { color: #993C1D; }
+.legenda-remarcada { color: #B45309; }
+ 
+/* ---------- Grade semanal ---------- */
+.cal-semana-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+}
+.cal-dia-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.cal-dia-header {
+    text-align: center;
+    padding: 6px 4px;
+    border-radius: 8px;
+    background: var(--bg-secondary, #f3f4f6);
+}
+.cal-dia-header .dia-nome {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-light, #888);
+}
+.cal-dia-header .dia-num {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text-primary, #111);
+    line-height: 1.2;
+}
+.cal-dia-header.hoje {
+    background: var(--primary, #592581);
+}
+.cal-dia-header.hoje .dia-nome,
+.cal-dia-header.hoje .dia-num {
+    color: #fff;
+}
+.cal-aula-card {
+    border-radius: 8px;
+    padding: 8px 10px;
+    background: #fff;
+    border: 0.5px solid #e5e7eb;
+    border-left: 3px solid #7F77DD;
+    cursor: pointer;
+    transition: box-shadow 0.15s;
+}
+.cal-aula-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.cal-aula-card.nivel-basico    { border-left-color: #1D9E75; }
+.cal-aula-card.nivel-avancado  { border-left-color: #7F77DD; }
+.cal-aula-card.nivel-particular { border-left-color: #D85A30; }
+.cal-aula-card.remarcada-para-aqui {
+    border-left-color: #B45309;
+    background: #FFFBEB;
+}
+.cal-aula-nome { font-size: 13px; font-weight: 500; color: var(--text-primary, #111); }
+.cal-aula-hora { font-size: 11px; color: var(--text-light, #888); margin-top: 2px; }
+.cal-aula-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 4px;
+}
+.badge-basico    { background: #E1F5EE; color: #0F6E56; }
+.badge-avancado  { background: #EEEDFE; color: #3C3489; }
+.badge-particular { background: #FAECE7; color: #993C1D; }
+.badge-remarcada { background: #FEF3C7; color: #92400E; }
+.cal-dia-vazio {
+    font-size: 12px;
+    color: var(--text-light, #ccc);
+    text-align: center;
+    padding: 16px 0;
+}
+.cal-aula-actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+}
+.cal-btn-mini {
+    font-size: 11px;
+    padding: 3px 7px;
+    border-radius: 5px;
+    border: 0.5px solid #d1d5db;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-light, #666);
+}
+.cal-btn-mini:hover { background: var(--bg-secondary, #f3f4f6); }
+.cal-btn-mini.danger { color: #DC2626; border-color: #FCA5A5; }
+ 
+/* ---------- Grade mensal ---------- */
+.cal-mes-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 1px;
+    background: #e5e7eb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+}
+.cal-mes-header-dia {
+    background: var(--bg-secondary, #f3f4f6);
+    text-align: center;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-light, #888);
+    padding: 8px 0;
+}
+.cal-mes-celula {
+    background: #fff;
+    min-height: 90px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.cal-mes-celula.outro-mes { background: var(--bg-secondary, #fafafa); }
+.cal-mes-celula.hoje-mes  { background: #F5F0FF; }
+.cal-mes-num {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-light, #888);
+    margin-bottom: 2px;
+}
+.cal-mes-celula.hoje-mes .cal-mes-num {
+    background: var(--primary, #592581);
+    color: #fff;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+}
+.cal-mes-aula-pill {
+    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+.pill-basico     { background: #D1FAE5; color: #065F46; }
+.pill-avancado   { background: #EDE9FE; color: #4C1D95; }
+.pill-particular { background: #FEE2E2; color: #991B1B; }
+.pill-remarcada  { background: #FEF3C7; color: #92400E; }
+ 
+/* ---------- Presença rápida ---------- */
+.presenca-rapida-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    border: 0.5px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.presenca-rapida-info { display: flex; flex-direction: column; gap: 2px; }
+.presenca-rapida-nome { font-size: 14px; font-weight: 500; }
+.presenca-rapida-detalhe { font-size: 12px; color: var(--text-light, #888); }
+.presenca-rapida-acoes { display: flex; gap: 6px; flex-wrap: wrap; }
+.btn-rapido {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 7px;
+    border: 0.5px solid #d1d5db;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-light, #555);
+    font-weight: 500;
+}
+.btn-rapido.presente { background: #D1FAE5; border-color: #6EE7B7; color: #065F46; }
+.btn-rapido.falta    { background: #FEE2E2; border-color: #FCA5A5; color: #991B1B; }
+.btn-rapido.remarcar { background: #FEF3C7; border-color: #FCD34D; color: #92400E; }
+.presenca-status-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-weight: 500;
+}
+.badge-status-presente { background: #D1FAE5; color: #065F46; }
+.badge-status-falta    { background: #FEE2E2; color: #991B1B; }
+.badge-status-remarcada { background: #FEF3C7; color: #92400E; }
+ 
+/* ---------- Checkboxes de dias ---------- */
+.dias-checkboxes {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.dia-check {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    background: var(--bg-secondary, #f3f4f6);
+    padding: 5px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    user-select: none;
+}
+.dia-check input[type="checkbox"] {
+    width: auto;
+    accent-color: var(--primary, #592581);
+}
