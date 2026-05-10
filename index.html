@@ -32,6 +32,10 @@
                 <button class="nav-btn" onclick="goToPage('presencas')">
                     ✓ Presença
                 </button>
+                <button class="nav-btn" onclick="goToPage('minhas-aulas')">
+                    🗓️ Minhas Aulas
+                 </button>
+ 
                 <button class="nav-btn" onclick="goToPage('financeiro')">
                     💰 Financeiro
                 </button>
@@ -179,6 +183,39 @@
                     </div>
                 </div>
             </section>
+            <section id="minhas-aulas" class="page">
+    <div class="page-header">
+        <h1>Minhas Aulas</h1>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <div class="cal-view-toggle">
+                <button id="btn-view-semana" class="toggle-btn active" onclick="setCalView('semana')">Semana</button>
+                <button id="btn-view-mes" class="toggle-btn" onclick="setCalView('mes')">Mês</button>
+            </div>
+            <button class="btn-secondary" id="cal-prev" onclick="calNavegar(-1)">&#8592;</button>
+            <span id="cal-periodo-label" style="font-weight:500; font-size:15px; min-width:160px; text-align:center;"></span>
+            <button class="btn-secondary" id="cal-next" onclick="calNavegar(1)">&#8594;</button>
+            <button class="btn-secondary" onclick="calHoje()">Hoje</button>
+        </div>
+    </div>
+ 
+    <!-- Legenda de níveis -->
+    <div class="cal-legenda">
+        <span class="legenda-item legenda-basico">● Básico</span>
+        <span class="legenda-item legenda-avancado">● Avançado</span>
+        <span class="legenda-item legenda-particular">● Particular</span>
+        <span class="legenda-item legenda-remarcada">⬡ Remarcada</span>
+    </div>
+ 
+    <!-- Área do calendário (semana ou mês) -->
+    <div id="cal-container"></div>
+ 
+    <!-- Presença rápida do dia atual -->
+    <div id="presenca-rapida-section" style="margin-top:24px;">
+        <h2 style="font-size:16px; font-weight:500; margin-bottom:12px;" id="presenca-rapida-titulo">Presença de hoje</h2>
+        <div id="presenca-rapida-lista"></div>
+    </div>
+</section>
+ 
 
             <!-- Financeiro Page -->
             <section id="financeiro" class="page">
@@ -396,6 +433,21 @@
                         <option value="pausado">Pausado</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label>Dias de Aula (fixos):</label>
+                        <div class="dias-checkboxes">
+                            <label class="dia-check"><input type="checkbox" name="diasSemana" value="1"> Seg</label>
+                            <label class="dia-check"><input type="checkbox" name="diasSemana" value="2"> Ter</label>
+                            <label class="dia-check"><input type="checkbox" name="diasSemana" value="3"> Qua</label>
+                            <label class="dia-check"><input type="checkbox" name="diasSemana" value="4"> Qui</label>
+                            <label class="dia-check"><input type="checkbox" name="diasSemana" value="5"> Sex</label>
+                            <label class="dia-check"><input type="checkbox" name="diasSemana" value="6"> Sáb</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Horário da Aula (fixo):</label>
+                        <input type="time" id="aluno-horario">
+                    </div>
                 <button type="submit" class="btn-primary">Salvar Aluno</button>
             </form>
         </div>
@@ -553,7 +605,49 @@
             </form>
         </div>
     </div>
-
-    <script src="script.js"></script>
+    <div id="modal-remarcar" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeRemarcarModal()">&times;</span>
+        <h2>Remarcar Aula</h2>
+        <p id="remarcar-info" style="color:var(--text-light); font-size:14px; margin-bottom:16px;"></p>
+        <form id="form-remarcar" onsubmit="salvarRemarcacao(event)">
+            <div class="form-group">
+                <label>Nova Data:</label>
+                <input type="date" id="remarcar-nova-data" required>
+            </div>
+            <div class="form-group">
+                <label>Novo Horário:</label>
+                <input type="time" id="remarcar-novo-horario" required>
+            </div>
+            <div class="form-group">
+                <label>Motivo:</label>
+                <select id="remarcar-motivo">
+                    <option value="professora">Indisponibilidade da professora</option>
+                    <option value="aluno">Pedido do aluno</option>
+                    <option value="feriado">Feriado</option>
+                    <option value="outros">Outros</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-primary">Confirmar Remarcação</button>
+        </form>
+    </div>
+</div>
+<!-- Firebase (sempre antes do script.js) -->
+  ============================================================
+ 
+    <!-- Chart.js e html2pdf — igual antes, não muda -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+ 
+    <!--
+      Os dois scripts abaixo usam type="module" — isso é necessário
+      porque o Firebase usa import/export moderno.
+ 
+      ORDEM IMPORTA:
+      1. firebase-config.js → conecta ao Firebase, faz login, carrega dados
+      2. script.js          → toda a lógica do sistema (igual antes, mas sem localStorage)
+    -->
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
