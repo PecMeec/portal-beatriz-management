@@ -1,17 +1,15 @@
 // ============================================================
-// firebase-config.js — versão com redirect corrigido
+// firebase-config.js — versão popup (compatível com Chrome)
 // ============================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
     getAuth, GoogleAuthProvider,
-    signInWithRedirect, getRedirectResult,
-    onAuthStateChanged, signOut, setPersistence, browserLocalPersistence
+    signInWithPopup, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ── Configuração do Firebase ──────────────────────────────────
 const firebaseConfig = {
     apiKey:            "AIzaSyBCClMpF75CyQcwYnGoLC6Z2hXJ2tDuZxQ",
     authDomain:        "beatriz-menagement.firebaseapp.com",
@@ -25,25 +23,45 @@ const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-// ── E-mail autorizado ─────────────────────────────────────────
 const EMAIL_AUTORIZADO = "ph6467788@gmail.com";
 
 window.db   = db;
 window.auth = auth;
 
-// ── DB inicial vazio ──────────────────────────────────────────
 window.DB = {
     alunos: [], modulos: [], aulas: [],
     presencas: [], pagamentos: [], avaliacoes: [], remarcacoes: []
 };
 
-// ── Flag para evitar inicializar o sistema duas vezes ─────────
 let sistemaIniciado = false;
 
 // ============================================================
-// TELA DE LOGIN
+// TELAS
 // ============================================================
+function mostrarCarregando(visivel) {
+    let el = document.getElementById('tela-loading');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'tela-loading';
+        el.style.cssText = `
+            position:fixed;inset:0;z-index:9999;
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            background:linear-gradient(135deg,#592581 0%,#3a1854 100%);
+            font-family:sans-serif;color:white;gap:16px;`;
+        el.innerHTML = `
+            <div style="font-size:40px;">✨</div>
+            <p style="font-size:16px;font-weight:500;margin:0;">Carregando...</p>
+            <div style="width:36px;height:36px;border:3px solid rgba(255,255,255,0.3);
+                        border-top-color:white;border-radius:50%;
+                        animation:spin 0.8s linear infinite;"></div>
+            <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
+        document.body.appendChild(el);
+    }
+    el.style.display = visivel ? 'flex' : 'none';
+}
+
 function mostrarTelaLogin(mensagem = '') {
+    mostrarCarregando(false);
     document.getElementById('app').style.display = 'none';
 
     let tela = document.getElementById('tela-login');
@@ -51,11 +69,10 @@ function mostrarTelaLogin(mensagem = '') {
         tela = document.createElement('div');
         tela.id = 'tela-login';
         tela.style.cssText = `
-            display:flex; flex-direction:column; align-items:center;
-            justify-content:center; min-height:100vh;
+            position:fixed;inset:0;z-index:9998;
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
             background:linear-gradient(135deg,#592581 0%,#3a1854 100%);
-            font-family:sans-serif;
-        `;
+            font-family:sans-serif;`;
         tela.innerHTML = `
             <div style="background:white;border-radius:20px;padding:48px 40px;
                         text-align:center;max-width:360px;width:90%;
@@ -81,63 +98,43 @@ function mostrarTelaLogin(mensagem = '') {
     }
 
     tela.style.display = 'flex';
-    if (mensagem) document.getElementById('login-msg').textContent = mensagem;
+    document.getElementById('login-msg').textContent = mensagem;
 
-    // Botão de login — só ativa depois que tela aparece
-    const btnLogin = document.getElementById('btn-google-login');
-    btnLogin.onclick = async () => {
-        btnLogin.disabled = true;
-        btnLogin.textContent = 'Redirecionando...';
-        try {
-            const provider = new GoogleAuthProvider();
-            provider.setCustomParameters({ prompt: 'select_account' });
-            // Garante que a sessão persiste no navegador antes do redirect
-            await setPersistence(auth, browserLocalPersistence);
-            await signInWithRedirect(auth, provider);
-        } catch (e) {
-            console.error('Erro login:', e);
-            btnLogin.disabled = false;
-            btnLogin.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20" alt="Google"> Entrar com Google`;
-            document.getElementById('login-msg').textContent = 'Erro ao iniciar login. Tente novamente.';
-        }
+    // ── IMPORTANTE: signInWithPopup chamado DIRETAMENTE no onclick ──
+    // Sem await, sem async antes — o Chrome exige que o popup
+    // seja aberto na mesma "call stack" do clique do usuário
+    document.getElementById('btn-google-login').onclick = () => {
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+
+        signInWithPopup(auth, provider)
+            .then(result => {
+                // Login feito — onAuthStateChanged vai cuidar do resto
+                console.log('Login OK:', result.user.email);
+            })
+            .catch(e => {
+                console.error('Erro popup:', e.code, e.message);
+                let msg = 'Erro ao fazer login. Tente novamente.';
+                if (e.code === 'auth/popup-blocked')
+                    msg = '⚠️ Popup bloqueado! Clique no ícone 🔒 na barra de endereço e permita popups para este site.';
+                else if (e.code === 'auth/popup-closed-by-user')
+                    msg = 'Login cancelado. Tente novamente.';
+                else if (e.code === 'auth/unauthorized-domain')
+                    msg = '⚠️ Domínio não autorizado no Firebase.';
+                document.getElementById('login-msg').textContent = msg;
+            });
     };
-}
-
-function mostrarCarregando() {
-    document.getElementById('app').style.display = 'none';
-    let loading = document.getElementById('tela-loading');
-    if (!loading) {
-        loading = document.createElement('div');
-        loading.id = 'tela-loading';
-        loading.style.cssText = `
-            display:flex;flex-direction:column;align-items:center;justify-content:center;
-            min-height:100vh;background:linear-gradient(135deg,#592581 0%,#3a1854 100%);
-            font-family:sans-serif;color:white;gap:16px;
-        `;
-        loading.innerHTML = `
-            <div style="font-size:40px;">✨</div>
-            <p style="font-size:16px;font-weight:500;">Carregando...</p>
-            <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.3);
-                        border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
-            <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
-        document.body.appendChild(loading);
-    }
-    loading.style.display = 'flex';
-}
-
-function esconderCarregando() {
-    const el = document.getElementById('tela-loading');
-    if (el) el.style.display = 'none';
 }
 
 function esconderTelaLogin() {
     const tela = document.getElementById('tela-login');
     if (tela) tela.style.display = 'none';
+    mostrarCarregando(false);
     document.getElementById('app').style.display = 'flex';
 }
 
 // ============================================================
-// CARREGAR DADOS DO FIRESTORE
+// DADOS
 // ============================================================
 async function carregarDadosFirestore(uid) {
     try {
@@ -160,14 +157,11 @@ async function carregarDadosFirestore(uid) {
         }
         return true;
     } catch (e) {
-        console.error("Erro ao carregar dados:", e);
+        console.error("Erro Firestore:", e);
         return false;
     }
 }
 
-// ============================================================
-// SALVAR NO FIRESTORE
-// ============================================================
 window.saveDB = async function () {
     const user = auth.currentUser;
     if (!user) return;
@@ -186,9 +180,6 @@ window.saveDB = async function () {
     }
 };
 
-// ============================================================
-// BOTÃO DE SAIR
-// ============================================================
 function adicionarBotaoLogout() {
     const nav = document.querySelector('.sidebar-nav');
     if (!nav || document.getElementById('btn-logout')) return;
@@ -201,18 +192,11 @@ function adicionarBotaoLogout() {
     nav.appendChild(btn);
 }
 
-// ============================================================
-// INICIAR SISTEMA após login confirmado
-// ============================================================
 async function iniciarSistema(user) {
     if (sistemaIniciado) return;
     sistemaIniciado = true;
-
-    mostrarCarregando();
-
+    mostrarCarregando(true);
     const ok = await carregarDadosFirestore(user.uid);
-    esconderCarregando();
-
     if (ok) {
         esconderTelaLogin();
         adicionarBotaoLogout();
@@ -225,50 +209,16 @@ async function iniciarSistema(user) {
 }
 
 // ============================================================
-// FLUXO PRINCIPAL
-// A lógica correta com redirect:
-// 1. Mostrar "carregando" enquanto verifica redirect
-// 2. Se veio do redirect do Google → processar login
-// 3. Se já tinha sessão ativa → iniciar direto
-// 4. Se não tem sessão → mostrar tela de login
+// CONTROLE DE AUTENTICAÇÃO
 // ============================================================
-mostrarCarregando();
 
-// Aguarda o resultado do redirect — isso resolve o loop
-getRedirectResult(auth)
-    .then(result => {
-        // result !== null significa que acabou de voltar do Google
-        if (result && result.user) {
-            const user = result.user;
-            if (user.email !== EMAIL_AUTORIZADO) {
-                signOut(auth);
-                esconderCarregando();
-                mostrarTelaLogin('⛔ Acesso não autorizado para este e-mail.');
-                return;
-            }
-            iniciarSistema(user);
-        } else {
-            // Não veio de redirect — verifica sessão existente via onAuthStateChanged
-            esconderCarregando();
-        }
-    })
-    .catch(e => {
-        console.error('Redirect error:', e);
-        esconderCarregando();
-        mostrarTelaLogin('Erro no login. Tente novamente.');
-    });
+// Mostra carregando enquanto verifica se já tem sessão
+mostrarCarregando(true);
 
-// Cuida de: sessão já existente (abriu o app sem precisar fazer login)
-// e de: logout (volta para tela de login)
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
-        // Só mostra login se o sistema não foi iniciado
-        // (evita piscar login durante o redirect)
-        if (!sistemaIniciado) {
-            esconderCarregando();
-            mostrarTelaLogin();
-        }
         sistemaIniciado = false;
+        mostrarTelaLogin();
         return;
     }
 
@@ -278,6 +228,5 @@ onAuthStateChanged(auth, async (user) => {
         return;
     }
 
-    // Sessão ativa existente (reload da página, abrir novamente)
-    iniciarSistema(user);
+    await iniciarSistema(user);
 });
