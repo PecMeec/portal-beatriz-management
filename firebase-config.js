@@ -1,13 +1,17 @@
 // ============================================================
-// firebase-config.js — VERSÃO CORRIGIDA
+// firebase-config.js — versão com redirect corrigido
 // ============================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+    getAuth, GoogleAuthProvider,
+    signInWithRedirect, getRedirectResult,
+    onAuthStateChanged, signOut, setPersistence, browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+// ── Configuração do Firebase ──────────────────────────────────
 const firebaseConfig = {
     apiKey:            "AIzaSyBCClMpF75CyQcwYnGoLC6Z2hXJ2tDuZxQ",
     authDomain:        "beatriz-menagement.firebaseapp.com",
@@ -21,19 +25,20 @@ const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-// ── APENAS UM e-mail autorizado ───────────────────────────────
-// Troque pelo e-mail dela quando for passar pra ela
-// Por enquanto pode ser o seu para testar
+// ── E-mail autorizado ─────────────────────────────────────────
 const EMAIL_AUTORIZADO = "ph6467788@gmail.com";
 
 window.db   = db;
 window.auth = auth;
 
-// ── DB inicial vazio — será preenchido pelo Firestore ─────────
+// ── DB inicial vazio ──────────────────────────────────────────
 window.DB = {
     alunos: [], modulos: [], aulas: [],
     presencas: [], pagamentos: [], avaliacoes: [], remarcacoes: []
 };
+
+// ── Flag para evitar inicializar o sistema duas vezes ─────────
+let sistemaIniciado = false;
 
 // ============================================================
 // TELA DE LOGIN
@@ -53,7 +58,8 @@ function mostrarTelaLogin(mensagem = '') {
         `;
         tela.innerHTML = `
             <div style="background:white;border-radius:20px;padding:48px 40px;
-                        text-align:center;max-width:360px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                        text-align:center;max-width:360px;width:90%;
+                        box-shadow:0 20px 60px rgba(0,0,0,0.3);">
                 <div style="font-size:48px;margin-bottom:12px;">✨</div>
                 <h1 style="color:#592581;font-size:22px;margin:0 0 6px;">Beatriz Management</h1>
                 <p style="color:#888;font-size:14px;margin:0 0 32px;">Portal de Gestão de Alunos</p>
@@ -77,17 +83,51 @@ function mostrarTelaLogin(mensagem = '') {
     tela.style.display = 'flex';
     if (mensagem) document.getElementById('login-msg').textContent = mensagem;
 
-    document.getElementById('btn-google-login').onclick = async () => {
+    // Botão de login — só ativa depois que tela aparece
+    const btnLogin = document.getElementById('btn-google-login');
+    btnLogin.onclick = async () => {
+        btnLogin.disabled = true;
+        btnLogin.textContent = 'Redirecionando...';
         try {
             const provider = new GoogleAuthProvider();
             provider.setCustomParameters({ prompt: 'select_account' });
-            // Redirect: vai para o Google e volta — funciona em todos os browsers
+            // Garante que a sessão persiste no navegador antes do redirect
+            await setPersistence(auth, browserLocalPersistence);
             await signInWithRedirect(auth, provider);
         } catch (e) {
             console.error('Erro login:', e);
+            btnLogin.disabled = false;
+            btnLogin.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20" alt="Google"> Entrar com Google`;
             document.getElementById('login-msg').textContent = 'Erro ao iniciar login. Tente novamente.';
         }
     };
+}
+
+function mostrarCarregando() {
+    document.getElementById('app').style.display = 'none';
+    let loading = document.getElementById('tela-loading');
+    if (!loading) {
+        loading = document.createElement('div');
+        loading.id = 'tela-loading';
+        loading.style.cssText = `
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            min-height:100vh;background:linear-gradient(135deg,#592581 0%,#3a1854 100%);
+            font-family:sans-serif;color:white;gap:16px;
+        `;
+        loading.innerHTML = `
+            <div style="font-size:40px;">✨</div>
+            <p style="font-size:16px;font-weight:500;">Carregando...</p>
+            <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.3);
+                        border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+            <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
+        document.body.appendChild(loading);
+    }
+    loading.style.display = 'flex';
+}
+
+function esconderCarregando() {
+    const el = document.getElementById('tela-loading');
+    if (el) el.style.display = 'none';
 }
 
 function esconderTelaLogin() {
@@ -103,16 +143,15 @@ async function carregarDadosFirestore(uid) {
     try {
         const ref  = doc(db, "dados", uid);
         const snap = await getDoc(ref);
-
         if (snap.exists()) {
-            const dados = snap.data();
-            window.DB.alunos      = dados.alunos      || [];
-            window.DB.modulos     = dados.modulos     || [];
-            window.DB.aulas       = dados.aulas       || [];
-            window.DB.presencas   = dados.presencas   || [];
-            window.DB.pagamentos  = dados.pagamentos  || [];
-            window.DB.avaliacoes  = dados.avaliacoes  || [];
-            window.DB.remarcacoes = dados.remarcacoes || [];
+            const d = snap.data();
+            window.DB.alunos      = d.alunos      || [];
+            window.DB.modulos     = d.modulos     || [];
+            window.DB.aulas       = d.aulas       || [];
+            window.DB.presencas   = d.presencas   || [];
+            window.DB.pagamentos  = d.pagamentos  || [];
+            window.DB.avaliacoes  = d.avaliacoes  || [];
+            window.DB.remarcacoes = d.remarcacoes || [];
         } else {
             await setDoc(ref, {
                 alunos:[], modulos:[], aulas:[],
@@ -163,17 +202,73 @@ function adicionarBotaoLogout() {
 }
 
 // ============================================================
-// CONTROLE DE AUTENTICAÇÃO
-// Roda toda vez que o estado muda: login, logout, reload da página
-// O getRedirectResult captura o resultado quando o Google redireciona de volta
+// INICIAR SISTEMA após login confirmado
 // ============================================================
+async function iniciarSistema(user) {
+    if (sistemaIniciado) return;
+    sistemaIniciado = true;
 
-// Primeiro: tenta pegar resultado de um redirect anterior
-getRedirectResult(auth).catch(e => console.error('Redirect error:', e));
+    mostrarCarregando();
 
+    const ok = await carregarDadosFirestore(user.uid);
+    esconderCarregando();
+
+    if (ok) {
+        esconderTelaLogin();
+        adicionarBotaoLogout();
+        if (typeof atualizarStatusPagamentos === 'function') atualizarStatusPagamentos();
+        if (typeof loadDashboard === 'function') loadDashboard();
+    } else {
+        sistemaIniciado = false;
+        mostrarTelaLogin('Erro ao carregar dados. Tente novamente.');
+    }
+}
+
+// ============================================================
+// FLUXO PRINCIPAL
+// A lógica correta com redirect:
+// 1. Mostrar "carregando" enquanto verifica redirect
+// 2. Se veio do redirect do Google → processar login
+// 3. Se já tinha sessão ativa → iniciar direto
+// 4. Se não tem sessão → mostrar tela de login
+// ============================================================
+mostrarCarregando();
+
+// Aguarda o resultado do redirect — isso resolve o loop
+getRedirectResult(auth)
+    .then(result => {
+        // result !== null significa que acabou de voltar do Google
+        if (result && result.user) {
+            const user = result.user;
+            if (user.email !== EMAIL_AUTORIZADO) {
+                signOut(auth);
+                esconderCarregando();
+                mostrarTelaLogin('⛔ Acesso não autorizado para este e-mail.');
+                return;
+            }
+            iniciarSistema(user);
+        } else {
+            // Não veio de redirect — verifica sessão existente via onAuthStateChanged
+            esconderCarregando();
+        }
+    })
+    .catch(e => {
+        console.error('Redirect error:', e);
+        esconderCarregando();
+        mostrarTelaLogin('Erro no login. Tente novamente.');
+    });
+
+// Cuida de: sessão já existente (abriu o app sem precisar fazer login)
+// e de: logout (volta para tela de login)
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
-        mostrarTelaLogin();
+        // Só mostra login se o sistema não foi iniciado
+        // (evita piscar login durante o redirect)
+        if (!sistemaIniciado) {
+            esconderCarregando();
+            mostrarTelaLogin();
+        }
+        sistemaIniciado = false;
         return;
     }
 
@@ -183,13 +278,6 @@ onAuthStateChanged(auth, async (user) => {
         return;
     }
 
-    esconderTelaLogin();
-    const ok = await carregarDadosFirestore(user.uid);
-
-    if (ok) {
-        adicionarBotaoLogout();
-        // Inicia o sistema após dados carregados
-        if (typeof atualizarStatusPagamentos === 'function') atualizarStatusPagamentos();
-        if (typeof loadDashboard === 'function') loadDashboard();
-    }
+    // Sessão ativa existente (reload da página, abrir novamente)
+    iniciarSistema(user);
 });
