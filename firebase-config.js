@@ -3,7 +3,7 @@
 // ============================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
+import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -80,15 +80,12 @@ function mostrarTelaLogin(mensagem = '') {
     document.getElementById('btn-google-login').onclick = async () => {
         try {
             const provider = new GoogleAuthProvider();
-            // Força seleção de conta toda vez
             provider.setCustomParameters({ prompt: 'select_account' });
-            await signInWithPopup(auth, provider);
+            // Redirect: vai para o Google e volta — funciona em todos os browsers
+            await signInWithRedirect(auth, provider);
         } catch (e) {
             console.error('Erro login:', e);
-            document.getElementById('login-msg').textContent =
-                e.code === 'auth/popup-blocked'
-                    ? '⚠️ Popup bloqueado. Permita popups para este site.'
-                    : 'Erro ao fazer login. Tente novamente.';
+            document.getElementById('login-msg').textContent = 'Erro ao iniciar login. Tente novamente.';
         }
     };
 }
@@ -168,7 +165,12 @@ function adicionarBotaoLogout() {
 // ============================================================
 // CONTROLE DE AUTENTICAÇÃO
 // Roda toda vez que o estado muda: login, logout, reload da página
+// O getRedirectResult captura o resultado quando o Google redireciona de volta
 // ============================================================
+
+// Primeiro: tenta pegar resultado de um redirect anterior
+getRedirectResult(auth).catch(e => console.error('Redirect error:', e));
+
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
         mostrarTelaLogin();
