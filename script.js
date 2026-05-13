@@ -652,3 +652,60 @@ function salvarRemarcacao(event){
     s.textContent=`.cal-dia-header.selecionado{background:#EDE9FE;border:2px solid var(--primary,#592581)}.cal-dia-header.selecionado .dia-nome,.cal-dia-header.selecionado .dia-num{color:var(--primary,#592581)}.cal-mes-celula.selecionado-mes{background:#EDE9FE;outline:2px solid var(--primary,#592581)}`;
     document.head.appendChild(s);
 })();
+
+// ============================================================
+// EXPOR FUNÇÕES GLOBALMENTE
+// Como script.js usa type="module", as funções ficam isoladas
+// e o HTML não consegue chamar onclick="goToPage(...)" etc.
+// A solução é atribuir cada função ao window explicitamente.
+// ============================================================
+window.goToPage                    = goToPage;
+window.loadDashboard               = loadDashboard;
+window.atualizarStatusPagamentos   = atualizarStatusPagamentos;
+
+// Alunos
+window.openAlunoModal              = openAlunoModal;
+window.closeAlunoModal             = closeAlunoModal;
+window.salvarAluno                 = salvarAluno;
+window.editarAluno                 = editarAluno;
+window.deletarAluno                = deletarAluno;
+window.filterAlunos                = filterAlunos;
+
+// Módulos
+window.openModuloModal             = openModuloModal;
+window.closeModuloModal            = closeModuloModal;
+window.salvarModulo                = salvarModulo;
+window.selecionarModulo            = selecionarModulo;
+window.openAulaModal               = openAulaModal;
+window.closeAulaModal              = closeAulaModal;
+window.salvarAula                  = salvarAula;
+
+// Presença
+window.carregarAulasDoModulo       = carregarAulasDoModulo;
+window.carregarPresencas           = carregarPresencas;
+window.abrirModalPresenca          = abrirModalPresenca;
+window.closePresencaModal          = closePresencaModal;
+window.atualizarCamposPresenca     = atualizarCamposPresenca;
+window.atualizarAvisoReposicao     = atualizarAvisoReposicao;
+window.salvarPresencaComJustificativa = salvarPresencaComJustificativa;
+
+// Financeiro
+window.loadFinanceiro              = loadFinanceiro;
+window.limparRegistrosAntigos      = limparRegistrosAntigos;
+window.abrirModalPagamento         = abrirModalPagamento;
+window.closeModalPagamento         = closeModalPagamento;
+window.salvarPagamento             = salvarPagamento;
+
+// Relatórios
+window.toggleSection               = toggleSection;
+window.exportarRelatorioPDF        = exportarRelatorioPDF;
+
+// Calendário
+window.setCalView                  = setCalView;
+window.calNavegar                  = calNavegar;
+window.calHoje                     = calHoje;
+window.selecionarDiaCal            = selecionarDiaCal;
+window.registrarPresencaRapida     = registrarPresencaRapida;
+window.abrirRemarcarModal          = abrirRemarcarModal;
+window.closeRemarcarModal          = closeRemarcarModal;
+window.salvarRemarcacao            = salvarRemarcacao;
