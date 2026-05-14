@@ -588,8 +588,8 @@ function renderSemana() {
 function renderMes() {
     const ano=calDataRef.getFullYear(),mes=calDataRef.getMonth(),hoje=toDateStr(new Date());
     document.getElementById('cal-periodo-label').textContent=`${NOMES_MES_CAL[mes]} ${ano}`;
-    const ig=inicioSemana(new Date(ano,mes,1));
-    let fg=new Date(ano,mes+1,0); while(fg.getDay()!==0) fg.setDate(fg.getDate()+1);
+    const p1=new Date(ano,mes,1),ig=new Date(p1); ig.setDate(ig.getDate()-p1.getDay());
+    let fg=new Date(ano,mes+1,0); while(fg.getDay()!==6) fg.setDate(fg.getDate()+1);
     let html='<div class="cal-mes-grid">';
     ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].forEach(d=>html+=`<div class="cal-mes-header-dia">${d}</div>`);
     let c=new Date(ig);
@@ -623,10 +623,10 @@ function obterOuCriarAulaId(ev,dateStr) {
     return aula.id;
 }
 
-function registrarPresencaRapida(aulaId,alunoId,status){
+async function registrarPresencaRapida(aulaId,alunoId,status){
     DB.presencas=DB.presencas.filter(p=>!(p.aulaId===aulaId&&p.alunoId===alunoId));
     DB.presencas.push({id:Date.now(),aulaId,alunoId,status,justificativa:null,nota:null,observacao:null,querRepor:false,dataRegistro:new Date().toISOString()});
-    saveDB();renderPresencaRapida();loadDashboard();
+    await saveDB();renderPresencaRapida();loadDashboard();
 }
 
 function abrirRemarcarModal(alunoId,dataOriginal,alunoNome,horarioAtual){
@@ -639,12 +639,12 @@ function abrirRemarcarModal(alunoId,dataOriginal,alunoNome,horarioAtual){
 }
 function closeRemarcarModal(){document.getElementById('modal-remarcar').classList.remove('active');remarcacaoEmEdicao=null;}
 
-function salvarRemarcacao(event){
+async function salvarRemarcacao(event){
     event.preventDefault();if(!remarcacaoEmEdicao) return;
     const{alunoId,dataOriginal}=remarcacaoEmEdicao;
     DB.remarcacoes=DB.remarcacoes.filter(r=>!(r.alunoId===alunoId&&r.dataOriginal===dataOriginal));
     DB.remarcacoes.push({id:Date.now(),alunoId,dataOriginal,dataNova:document.getElementById('remarcar-nova-data').value,novoHorario:document.getElementById('remarcar-novo-horario').value,motivo:document.getElementById('remarcar-motivo').value,criadaEm:new Date().toISOString()});
-    saveDB();closeRemarcarModal();renderCalendario();renderPresencaRapida();
+    await saveDB();closeRemarcarModal();renderCalendario();renderPresencaRapida();
 }
 
 (function(){
