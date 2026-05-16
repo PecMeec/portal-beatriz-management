@@ -33,7 +33,7 @@ window.DB = {
     presencas: [], pagamentos: [], avaliacoes: [], remarcacoes: []
 };
 
-let sistemaIniciado = false;
+let sistemaIniciado = true;
 
 // ============================================================
 // TELAS
